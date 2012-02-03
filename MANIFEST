@@ -1,0 +1,11 @@
+Changes
+lib/Test/ModuleVersion.pm
+Makefile.PL
+MANIFEST			This list of files
+README
+t/basic.t
+Test-ModuleVersion-0.01/META.yml
+xt/get_module_url.t
+xt/module.t
+xt/mvt.pl
+META.yml                                 Module meta-data (added by MakeMaker)

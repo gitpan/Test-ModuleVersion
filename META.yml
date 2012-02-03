@@ -1,0 +1,25 @@
+--- #YAML:1.0
+name:               Test-ModuleVersion
+version:            0.01
+abstract:           Module Version Test Generator (experimental stage)
+author:
+    - Yuki Kimoto <kimoto.yuki@gmail.com>
+license:            perl
+distribution_type:  module
+configure_requires:
+    ExtUtils::MakeMaker:  0
+build_requires:
+    ExtUtils::MakeMaker:  0
+requires:
+    HTTP::Tiny:      0.016
+    JSON:            2.53
+    Object::Simple:  3.0621
+    Test::More:      0
+no_index:
+    directory:
+        - t
+        - inc
+generated_by:       ExtUtils::MakeMaker version 6.56
+meta-spec:
+    url:      http://module-build.sourceforge.net/META-spec-v1.4.html
+    version:  1.4
