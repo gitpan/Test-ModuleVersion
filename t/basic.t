@@ -5,9 +5,13 @@ use warnings;
 use Test::ModuleVersion;
 
 my $tm = Test::ModuleVersion->new;
-$tm->exclude([qw/TimeDate Perl Mail/]);
-$tm->show_lack_module_url(1);
-my $test_script = $tm->test_script;
-ok($test_script);
+$tm->ignore([qw/TimeDate Perl Mail/]);
+$tm->detect;
+ok($tm->test_script);
+
+$tm->modules([
+  ['DBIx::Custom' => '1.01']
+]);
+like($tm->test_script, qr/DBIx::Custom.*1.01/);
 
 1;

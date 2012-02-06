@@ -5,6 +5,8 @@ MANIFEST			This list of files
 README
 t/basic.t
 xt/get_module_url.t
-xt/module.t
-xt/mvt.pl
+xt/module_auto.t
+xt/module_manual.t
+xt/mvt_auto.pl
+xt/mvt_manual.pl
 META.yml                                 Module meta-data (added by MakeMaker)

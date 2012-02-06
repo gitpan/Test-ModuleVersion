@@ -1,7 +1,7 @@
 --- #YAML:1.0
 name:               Test-ModuleVersion
-version:            0.02
-abstract:           Module Version Test Generator (experimental stage)
+version:            0.03
+abstract:           Module Version Test Generator (EXPERIMENTAL)
 author:
     - Yuki Kimoto <kimoto.yuki@gmail.com>
 license:            perl
