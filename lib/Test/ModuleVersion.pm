@@ -5,10 +5,11 @@ use ExtUtils::Installed;
 use HTTP::Tiny;
 use JSON 'decode_json';
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 has default_ignore => sub { ['Perl', 'Test::ModuleVersion'] };
 has ignore => sub { [] };
+has lib => sub { [] };
 has modules => sub { [] };
 
 sub detect {
@@ -49,10 +50,15 @@ sub test_script {
   
   # Start test code
   my $code = <<'EOS';
-use Test::More 'no_plan';
 use strict;
 use warnings;
 use ExtUtils::Installed;
+use FindBin;
+EOS
+  
+  $code .= qq|use lib "\$FindBin::Bin/$_";\n| for @{$self->lib};
+
+  $code .= <<'EOS';
 
 my $command = shift;
 die qq/command "$command" is not found/
@@ -60,8 +66,7 @@ die qq/command "$command" is not found/
 
 if (defined $command) {
   my $builder = Test::More->builder;
-  my $out_fh;
-  open $out_fh, '>', undef;
+  open my $out_fh, '>', undef;
   $builder->output($out_fh);
   $builder->failure_output($out_fh);
   $builder->todo_output($out_fh);
@@ -70,11 +75,6 @@ if (defined $command) {
 eval "require Test::ModuleVersion";
 die "Test::ModuleVersion loading fail: $@" if $@;
 
-sub module_version_is {
-  my ($module, $got, $expected) = @_;
-  is($got, $expected, "$module version: $expected");
-}
-
 my $modules = [];
 my $failed = [];
 my $require_ok;
@@ -82,7 +82,8 @@ my $version_ok;
 my $version;
 
 EOS
-
+  
+  my $test_count = 0;
   for my $m (@{$self->modules}) {
     my ($module, $version) = @$m;
     next if grep { $module eq $_ } @{$self->default_ignore};
@@ -92,6 +93,7 @@ EOS
       . "\$version_ok = is(\$${module}::VERSION, '$version', '$module version: $version');\n"
       . "push \@\$modules, ['$module' => '$version'];\n"
       . "push \@\$failed, ['$module' => '$version'] unless \$require_ok && \$version_ok;\n\n";
+    $test_count += 2;
   }
   
   $code .= <<'EOS';
@@ -108,6 +110,9 @@ if (defined $command) {
   }  
 }
 EOS
+  
+  # Test count
+  $code = "use Test::More tests => $test_count;\n" . $code;
   
   return $code;
 }
@@ -237,6 +242,19 @@ You can also print all modules in test by C<list_all> command.
 Have a fun to use L<Test::ModuleVersion>.
 
 =head1 ATTRIBUTES
+
+=head2 C<lib>
+
+  my $lib = $self->lib;
+  $tm = $tm->lib(['extlib/lib/perl5']);
+
+Module including pass from script directory.
+The following code is added to test script.
+
+  use lib "$FindBin::Bin/extlib/lib/perl5";
+
+If the module is installed in this directory,
+module version test is success.
 
 =head2 C<ignore>
 

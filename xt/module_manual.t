@@ -1,7 +1,9 @@
-use Test::More 'no_plan';
+use Test::More tests => 6;
 use strict;
 use warnings;
 use ExtUtils::Installed;
+use FindBin;
+use lib "$FindBin::Bin/extlib/lib/perl5";
 
 my $command = shift;
 die qq/command "$command" is not found/
@@ -9,8 +11,7 @@ die qq/command "$command" is not found/
 
 if (defined $command) {
   my $builder = Test::More->builder;
-  my $out_fh;
-  open $out_fh, '>', undef;
+  open my $out_fh, '>', undef;
   $builder->output($out_fh);
   $builder->failure_output($out_fh);
   $builder->todo_output($out_fh);
@@ -18,11 +19,6 @@ if (defined $command) {
 
 eval "require Test::ModuleVersion";
 die "Test::ModuleVersion loading fail: $@" if $@;
-
-sub module_version_is {
-  my ($module, $got, $expected) = @_;
-  is($got, $expected, "$module version: $expected");
-}
 
 my $modules = [];
 my $failed = [];

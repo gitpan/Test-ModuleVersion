@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Test-ModuleVersion
-version:            0.03
+version:            0.04
 abstract:           Module Version Test Generator (EXPERIMENTAL)
 author:
     - Yuki Kimoto <kimoto.yuki@gmail.com>
@@ -13,7 +13,7 @@ build_requires:
 requires:
     HTTP::Tiny:      0.016
     JSON:            2.53
-    Object::Simple:  3.0621
+    Object::Simple:  3.0625
     Test::More:      0
 no_index:
     directory:
