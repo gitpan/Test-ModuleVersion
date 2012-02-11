@@ -7,5 +7,4 @@ t/basic.t
 xt/get_module_url.t
 xt/module.t
 xt/module_auto.t
-xt/mvt.pl
 META.yml                                 Module meta-data (added by MakeMaker)
