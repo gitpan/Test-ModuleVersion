@@ -1,6 +1,6 @@
 use 5.008007;
 package Test::ModuleVersion;
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 package
   Test::ModuleVersion::Object::Simple;
@@ -2576,6 +2576,7 @@ use Carp 'croak';
 
 sub has { __PACKAGE__->Test::ModuleVersion::Object::Simple::attr(@_) }
 has comment => '';
+has distnames => sub { {} };
 has default_ignore => sub { ['Perl', 'Test::ModuleVersion'] };
 has ignore => sub { [] };
 has lib => sub { [] };
@@ -2594,10 +2595,12 @@ sub detect {
 }
 
 sub get_module_url {
-  my ($module, $version) = @_;
+  my ($self, $module, $version) = @_;
   
   # Module
   my $module_dist = $module;
+  my $distnames = $self->distnames;
+  $module_dist = $distnames->{$module} if defined $distnames->{$module};
   $module_dist =~ s/::/-/g;
   
   # Get dounload URL using metaCPAN api
@@ -2644,10 +2647,12 @@ use FindBin;
 EOS
   
   # Library path
-  $code .= qq|use lib "\$FindBin::Bin/$_";\n| for @{$self->lib};
+  my $libs = ref $self->lib ? $self->lib : [$self->lib];
+  $code .= qq|use lib "\$FindBin::Bin/$_";\n| for @$libs;
   
   # Main
   $code .= <<'EOS';
+
 sub main {
   my $command = shift;
   die qq/command "$command" is not found/
@@ -2689,12 +2694,13 @@ EOS
   $code .= <<'EOS';
   # Print module URLs
   if (defined $command) {
+    my $tm = Test::ModuleVersion->new;
     my @ms = $command eq 'list_fail' ? @$failed
       : $command eq 'list' ? @$modules
       : undef;
     for my $m (@ms) {
       my ($module, $version) = @$m;
-      my $url = Test::ModuleVersion::get_module_url($module, $version);
+      my $url = $tm->get_module_url($module, $version);
       if (defined $url) { print "$url\n" }
       else { print STDERR "$module $version is unknown\n" }
     }  
@@ -2875,10 +2881,28 @@ You can embbed comment into test script.
     perl mvt.pl > t/module.t
   EOS
 
+=head2 C<distnames>
+
+  my $distnames = $self->distnames;
+  $tm = $tm->distnames({
+    LWP => 'libwww-perl',
+    ...
+  });
+
+Module distribution name corresponding to module name.
+Some module is not same distribution name as module name,
+like LWP module.
+
+LWP is module name, but distribution name is C<libwww-perl>.
+If right distribution name is unknown, L<Test::ModuleVersion>
+can't get module URL, so you must set C<distnames> attribute
+when distribution name is not same as module name.
+
 =head2 C<lib>
 
   my $lib = $self->lib;
-  $tm = $tm->lib(['extlib/lib/perl5']);
+  $tm = $tm->lib('extlib/lib/perl5');
+  $tm = $tm->lib(['extlib/lib/perl5', ...]);
 
 Module including pass from script directory.
 The following code is added to test script.
