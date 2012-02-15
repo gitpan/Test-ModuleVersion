@@ -11,8 +11,10 @@ use Test::ModuleVersion;
 
 {
   my $tm = Test::ModuleVersion->new;
-  $tm->distnames({LWP => 'libwww-perl'});
-  my $url = $tm->get_module_url('LWP', '6.03');
+  my $distnames = {
+    'LWP' => 'libwww-perl',
+  };
+  my $url = $tm->get_module_url('LWP', '6.03', {distnames => $distnames});
   like($url, qr/http.*libwww-perl-6.03/);
 }
 

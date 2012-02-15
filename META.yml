@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Test-ModuleVersion
-version:            0.07
+version:            0.09
 abstract:           Module Version Test Generator (EXPERIMENTAL)
 author:
     - Yuki Kimoto <kimoto.yuki@gmail.com>
