@@ -1,6 +1,6 @@
 use 5.008007;
 package Test::ModuleVersion;
-our $VERSION = '0.10';
+our $VERSION = '0.11';
 
 package
   Test::ModuleVersion::Object::Simple;
@@ -2602,6 +2602,7 @@ sub get_module_url {
   $opts ||= {};
   my $distnames = $opts->{distnames} || {};
   my $privates = $opts->{privates} || {};
+  my $lwp = $opts->{lwp} || 'auto';
 
   # Module
   my $module_dist = $module;
@@ -2618,9 +2619,34 @@ sub get_module_url {
     my $metacpan_api = 'http://api.metacpan.org/v0';
     my $search = "release/_search?q=name:$module_dist-$version"
       . "&fields=download_url,name";
-    my $http = Test::ModuleVersion::HTTP::Tiny->new;
     my $module_info = "$metacpan_api/$search";
-    my $res = $http->get($module_info);
+    my $res = {};
+    my $agent;
+    if ($lwp eq 'use' || $lwp eq 'auto' && eval { require LWP::UserAgent; 1})
+    {
+      require LWP::UserAgent;
+      $agent = 'LWP::UserAgent';
+      my $ua = LWP::UserAgent->new(
+        parse_head => 0,
+        env_proxy => 1,
+        agent => "Test::ModuleVersion/$VERSION",
+        timeout => 30
+      );
+      my $r = $ua->get($module_info);
+      $agent = 'LWP::UserAgent';
+      $res->{success} = $r->is_success;
+      $res->{status_line} = $r->status_line;
+      $res->{content} = $r->content;
+    }
+    else {
+      $agent = 'HTTP::Tiny';
+      my $ua = Test::ModuleVersion::HTTP::Tiny->new;
+      my $r = $ua->get($module_info);
+      $res->{success} = $r->{success};
+      $res->{status_line} = "$r->{status} $r->{reason}";
+      $res->{content} = $r->{content};
+    }
+    
     my $error;
     if ($res->{success} && !$ENV{TEST_MODULEVERSION_REQUEST_FAIL}) {
       my $release = Test::ModuleVersion::JSON::PP::decode_json $res->{content};
@@ -2628,9 +2654,7 @@ sub get_module_url {
       $error = "$module_dist-$version is unknown" unless defined $url;
     }
     else {
-      my $status = $res->{status};
-      my $reason = $res->{reason};
-      $error = "Request to metaCPAN fail($status $reason): $module_info";
+      $error = "Request to metaCPAN fail($res->{status_line}):$agent:$module_info";
     }
     ${$opts->{error}} = $error if ref $opts->{error};
   }
@@ -2642,7 +2666,15 @@ sub test_script {
   my ($self, %opts) = @_;
   
   # Code
-  my $code = $self->before . "\n";
+  my $code;
+
+  # Library path
+  my $libs = ref $self->lib ? $self->lib : [$self->lib];
+  $code .= "use FindBin;\n";
+  $code .= qq|use lib "\$FindBin::Bin/$_";\n| for @$libs;
+  
+  # Before
+  $code .= $self->before . "\n";
   
   # Reffer this module
   $code .= "# Created by Test::ModuleVersion $Test::ModuleVersion::VERSION\n";
@@ -2653,25 +2685,26 @@ use Test::More;
 use strict;
 use warnings;
 use ExtUtils::Installed;
-use FindBin;
 EOS
-  
-  # Library path
-  my $libs = ref $self->lib ? $self->lib : [$self->lib];
-  $code .= qq|use lib "\$FindBin::Bin/$_";\n| for @$libs;
   
   # Main
   $code .= <<'EOS';
 
 sub main {
   my $command = shift;
-  my $option = shift;
+  my @options = @_;
   
   die qq/command "$command" is unkonwn command/
     if defined $command && $command ne 'list';
   
-  die qq/list $option is unknown option/
-    if defined $option && $option ne '--fail';
+  my $list_failed;
+  my $lwp = 'auto';
+  for my $option (@options) {
+    if ($option eq '--fail') { $list_failed = 1 }
+    elsif ($option eq '--lwp') { $lwp = 'use' }
+    elsif ($option eq '--no-lwp') { $lwp = 'no' }
+    else { die qq/list $option is unknown option/ }
+  }
   
   if (defined $command) {
     my $builder = Test::More->builder;
@@ -2714,14 +2747,14 @@ EOS
     my $privates = <%%%%%% privates %%%%%%>
     ;
     my $tm = Test::ModuleVersion->new;
-    my @ms = $command eq 'list' && ($option || '') eq '--fail' ? @$failed
+    my @ms = $command eq 'list' && $list_failed ? @$failed
       : $command eq 'list' ? @$modules
       : [];
     for my $m (@ms) {
       my ($module, $version) = @$m;
       my $error;
       my $url = $tm->get_module_url($module, $version,
-        {distnames => $distnames, privates => $privates, error => \$error});
+        {distnames => $distnames, privates => $privates, error => \$error, lwp => $lwp});
       if (defined $url) { print "$url\n" }
       else { print STDERR "$error\n" }
     }  
@@ -2899,6 +2932,16 @@ if cpanm is in current directory.
 
 Modules is installed into C<extlib> directory.
 
+If L<LWP::UserAgent> is available, test script use LWP::UserAgent
+for HTTP request.
+If L<LWP::UserAgent> is not available, test script use L<HTTP::Tiny>.
+
+If you don't use L<LWP::UserAgent>, use C<--no-lwp> option.
+
+  $ perl module.t list --no-lwp
+
+If you force L<LWP::UserAgetn>, use C<--lwp> option.
+
 Have a fun to use L<Test::ModuleVersion>.
 
 =head1 ATTRIBUTES
@@ -3049,6 +3092,14 @@ You can set options
   error => \$error
 
 You can get error message.
+
+=item * C<lwp>
+
+  lwp => 'use'
+  lwp => 'no'
+  lwp => 'auto'
+
+use L<LWP::UserAgent> or not or automatically use
 
 =back
 
