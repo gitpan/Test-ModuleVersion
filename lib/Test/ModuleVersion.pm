@@ -1,6 +1,6 @@
 use 5.008007;
 package Test::ModuleVersion;
-our $VERSION = '0.15';
+our $VERSION = '0.16';
 
 package
   Test::ModuleVersion::Object::Simple;
@@ -2671,9 +2671,7 @@ sub detect {
   my @modules;
   for my $module (sort $ei->modules) {
     next if grep { $module eq $_ } @$ignore;
-    eval "require $module";
-    no strict 'refs';
-    my $version = ${"${module}::VERSION"};
+    my $version = $ei->version($module);
     push @modules, [$module => $version] if length $version;
   }
 

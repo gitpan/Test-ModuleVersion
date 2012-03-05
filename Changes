@@ -1,7 +1,9 @@
+0.16
+  - revert detect method to 0.13 for some bug
 0.15
   - improved detect method detection
 0.14
-  - EXPERIMENTAL flag is removed from this module
+  - expriemntal flag is removed from this module
   - added BACKWARDS COMPATIBILITY POLICY
     ---------------------------------
     If a functionality is DEPRECATED, you can know it by DEPRECATED warnings
