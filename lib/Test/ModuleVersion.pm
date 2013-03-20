@@ -1,6 +1,6 @@
 use 5.008007;
 package Test::ModuleVersion;
-our $VERSION = '0.16';
+our $VERSION = '0.17';
 
 package
   Test::ModuleVersion::Object::Simple;
@@ -2828,6 +2828,22 @@ sub _source {
 =head1 NAME
 
 Test::ModuleVersion - Module version test generator
+
+=head1 CAUTION
+
+(2013/3/20)
+
+Sorry. This module is DEPRECATED because L<cpanm> and L<cpanfile> is much better.
+
+If you want to install moudles, use L<cpanm> and L<cpanfile> instead.
+
+See L<https://github.com/kraih/mojo/wiki/Installation-of-cpan-modules-by-cpanm-and-cpanfile>
+
+If you want to test module version, you write test by yourself.
+
+  is($DBIx::Custom::VERSION, '0.2108');
+
+This module will be removed from CPAN on 2018/3/1
 
 =head1 SYNOPSIS
 
